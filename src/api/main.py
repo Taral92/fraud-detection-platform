@@ -2,6 +2,54 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import joblib
 import numpy as np
+
+import boto3
+import os
+import tempfile
+import uvicorn
+from dotenv import load_dotenv
+
+load_dotenv()
+# Load model from S3
+def load_model_from_s3():
+    s3 = boto3.client('s3')
+    bucket = os.getenv('S3_BUCKET', 'fraud-detection-platform-taral')
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pkl') as f:
+        s3.download_fileobj(bucket, 'models/fraud_model.pkl', f)
+        model_path = f.name
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pkl') as f:
+        s3.download_fileobj(bucket, 'models/threshold.pkl', f)
+        threshold_path = f.name
+
+    model = joblib.load(model_path)
+    threshold = joblib.load(threshold_path)
+    return model, threshold
+
+# Try S3 first, fallback to local
+try:
+    model, threshold = load_model_from_s3()
+    print("Model loaded from S3")
+except Exception as e:
+    print(f"S3 failed, loading locally: {e}")
+    model = joblib.load('models/fraud_model.pkl')
+    threshold = joblib.load('models/threshold.pkl')
+
+app = FastAPI(
+    title="Fraud Detection API",
+    description="Real time fraud detection with RAG investigation",
+    version="2.0.0"
+)
+
+# Schemas
+class Transaction(BaseModel):
+    features: list[float]
+
+class Question(BaseModel):
+    question: str
+
+=======
 import pandas as pd
 import uvicorn
 
@@ -20,6 +68,7 @@ class Transaction(BaseModel):
     features: list[float]
 
 # Response schema
+
 class PredictionResponse(BaseModel):
     transaction_id: str
     is_fraud: bool
@@ -29,6 +78,9 @@ class PredictionResponse(BaseModel):
 # Health check
 @app.get("/health")
 def health():
+    return {"status": "healthy", "model": "fraud_detection_v2"}
+
+# Predict
     return {"status": "healthy", "model": "fraud_detection_v1"}
 
 # Predict endpoint
@@ -55,7 +107,11 @@ def predict(transaction: Transaction):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# Explain
+
 # Explain endpoint
+
 @app.post("/explain")
 def explain(transaction: Transaction):
     try:
@@ -63,7 +119,11 @@ def explain(transaction: Transaction):
         features = np.array(transaction.features).reshape(1, -1)
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(features)
+
+
+
         
+
         feature_importance = {
             f"feature_{i}": round(float(v), 4)
             for i, v in enumerate(shap_values[0])
@@ -82,13 +142,31 @@ def explain(transaction: Transaction):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# RAG Investigation
+@app.post("/ask")
+def ask(question: Question):
+    try:
+        from src.rag.pipeline import ask_question
+        result = ask_question(question.question)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Model info
+
 # Model info endpoint
+
 @app.get("/model/info")
 def model_info():
     return {
         "model_type": "XGBoost",
         "threshold": threshold,
+
+        "version": "2.0.0",
+
         "version": "1.0.0",
+
         "features_expected": model.n_features_in_
     }
 
