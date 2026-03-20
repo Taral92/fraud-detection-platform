@@ -7,7 +7,7 @@ import os
 import tempfile
 import uvicorn
 from dotenv import load_dotenv
-
+from prometheus_fastapi_instrumentator import Instrumentator
 load_dotenv()
 
 def load_model_from_s3():
@@ -39,7 +39,7 @@ app = FastAPI(
     description="Real time fraud detection with RAG investigation",
     version="2.0.0"
 )
-
+Instrumentator().instrument(app).expose(app)
 class Transaction(BaseModel):
     features: list[float]
 
