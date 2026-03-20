@@ -1,0 +1,32 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd fraud-detection-platform
+            git pull origin develop
+            DOCKER_BUILDKIT=0 docker build -t fraud-detection-api .
+            docker stop fraud-api || true
+            docker rm fraud-api || true
+            docker run -d \
+              -p 8000:8000 \
+              --env-file .env \
+              --name fraud-api \
+              fraud-detection-api:latest
