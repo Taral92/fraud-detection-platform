@@ -22,11 +22,4 @@ jobs:
           script: |
             cd fraud-detection-platform
             git pull origin develop
-            DOCKER_BUILDKIT=0 docker build -t fraud-detection-api .
-            docker stop fraud-api || true
-            docker rm fraud-api || true
-            docker run -d \
-              -p 8000:8000 \
-              --env-file .env \
-              --name fraud-api \
-              fraud-detection-api:latest
+            DOCKER_BUILDKIT=0 docker-compose up --build -d
