@@ -9,10 +9,10 @@ import uvicorn
 from dotenv import load_dotenv
 
 load_dotenv()
-# Load model from S3
+
 def load_model_from_s3():
     s3 = boto3.client('s3')
-    bucket = os.getenv('S3_BUCKET', 'fraud-detection-platform-taral')
+    bucket = os.getenv('S3_BUCKET', 'fraud-detection-taral')
     
     with tempfile.NamedTemporaryFile(delete=False, suffix='.pkl') as f:
         s3.download_fileobj(bucket, 'models/fraud_model.pkl', f)
@@ -26,7 +26,6 @@ def load_model_from_s3():
     threshold = joblib.load(threshold_path)
     return model, threshold
 
-# Try S3 first, fallback to local
 try:
     model, threshold = load_model_from_s3()
     print("Model loaded from S3")
@@ -41,7 +40,6 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Schemas
 class Transaction(BaseModel):
     features: list[float]
 
@@ -54,12 +52,10 @@ class PredictionResponse(BaseModel):
     confidence: float
     risk_level: str
 
-# Health check
 @app.get("/health")
 def health():
     return {"status": "healthy", "model": "fraud_detection_v2"}
 
-# Predict
 @app.post("/predict", response_model=PredictionResponse)
 def predict(transaction: Transaction):
     try:
@@ -83,7 +79,6 @@ def predict(transaction: Transaction):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Explain
 @app.post("/explain")
 def explain(transaction: Transaction):
     try:
@@ -110,7 +105,6 @@ def explain(transaction: Transaction):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# RAG Investigation
 @app.post("/ask")
 def ask(question: Question):
     try:
@@ -120,7 +114,6 @@ def ask(question: Question):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Model info
 @app.get("/model/info")
 def model_info():
     return {
