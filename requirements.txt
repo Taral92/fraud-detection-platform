@@ -10,5 +10,5 @@ pydantic==2.12.5
 boto3
 python-dotenv==1.2.2
 email-validator
-
+prometheus-fastapi-instrumentator
 

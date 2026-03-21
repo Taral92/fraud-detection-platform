@@ -3,27 +3,29 @@ version: '3.8'
 services:
   api:
     build: .
-    container_name: fraud-detection-api
+    container_name: fraud-api
     ports:
       - "8000:8000"
     volumes:
       - ./models:/app/models
-      - ./data:/app/data
-    environment:
-      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
     restart: always
 
-  mlflow:
-    image: python:3.11-slim
-    container_name: mlflow-server
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
     ports:
-      - "5000:5000"
+      - "9090:9090"
     volumes:
-      - ./mlruns:/mlruns
-    command: >
-      bash -c "pip install mlflow &&
-               mlflow server
-               --host 0.0.0.0
-               --port 5000
-               --backend-store-uri /mlruns"
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
     restart: always
