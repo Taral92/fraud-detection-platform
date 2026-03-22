@@ -16,4 +16,4 @@ Phase 2 — Model Training 🔄
 Phase 3 — FastAPI Backend ⏳
 Phase 4 — Cloud Deployment ⏳
 Phase 5 — Monitoring ⏳# CI/CD test
-in progresss
+in progressss
