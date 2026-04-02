@@ -12,7 +12,7 @@ load_dotenv()
 
 def load_model_from_s3():
     s3 = boto3.client('s3')
-    bucket = os.getenv('S3_BUCKET', 'fraud-detection-taral')
+    bucket = os.getenv('S3_BUCKET', 'fraud-detection-platform-taral')
     
     with tempfile.NamedTemporaryFile(delete=False, suffix='.pkl') as f:
         s3.download_fileobj(bucket, 'models/fraud_model.pkl', f)
