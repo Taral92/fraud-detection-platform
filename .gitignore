@@ -7,3 +7,14 @@ data/
 *.pkl
 mlruns/
 .ipynb_checkpoints/.env
+models/*.pkl
+data/*.csv
+data/processed/
+data/ieee-fraud-detection/
+mlruns/
+notebooks/mlruns/
+notebooks/mlflow.db
+**/__pycache__/
+*.pyc
+.DS_Store
+.env
