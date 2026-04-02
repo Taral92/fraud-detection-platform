@@ -13,7 +13,7 @@
       "portMappings": [{"containerPort": 8000, "protocol": "tcp"}],
       "environment": [
         {"name": "AWS_DEFAULT_REGION", "value": "us-east-1"},
-        {"name": "S3_BUCKET", "value": "fraud-detection-taral"}
+        {"name": "S3_BUCKET", "value": "fraud-detection-platform-taral"}
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
